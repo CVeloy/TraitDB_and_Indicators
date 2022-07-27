@@ -1,0 +1,619 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+Column naming convention:
+
+species (species name as it appears on registers)
+weight (kg/km3)
+number (No./km3)
+long (Longitude)
+lat (Latitude)
+depth
+coord (=paste(long,"/",lat)))
+region (if data is examined by sector and Jaccard is calculated)
+
+name of database should be DataFish
+
+Packages and initialization of functions
+```{r}
+library(tidyverse)
+library (rgdal)
+library (maptools)
+library (sp)
+library (inlmisc)
+library (raster)
+library (SciViews)
+library(betapart)
+library (sf)
+library (gridExtra)
+library(ggpubr)
+library(rstatix)
+library(broom)
+library(emmeans)
+library(ggpmisc)
+library(grid)
+library(corrplot)
+library(xtable)
+library(Hmisc)
+library(mgcv)
+library(mgcViz)
+library(voxel)
+library(magrittr)
+
+####FILTERS####
+#filter 80% appeareances
+
+YEARFILTERING <-function(db,percent){
+  TimeSerie = length(as.vector(unique(db$year)))
+  x=percent
+  yearfilter<-db%>%
+    group_by(Spp_Correct,region)%>%
+    dplyr::summarise(years_present = n_distinct(.data$year))%>%
+    dplyr::filter(.data$years_present>TimeSerie*x)
+  semi_join(db,yearfilter,by="Spp_Correct")
+}
+
+#Filter by other traits (apply after taxonomical filter or directly for total community)
+
+traitfilter<-function(db,variable,bool){
+  column<-variable
+  dplyr::filter(db,(!!as.name(column))==bool)
+}
+
+
+```
+
+
+Making Fish_n_Traits database
+
+```{r}
+Fishcatalog<-readxl::read_excel("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Data/SppCatalogoWESTMEDcorrectspp.xlsx")%>%
+dplyr::filter(FlagExclusionTax==0)
+PredList<- read.csv2("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Data/Predlist+20.csv")%>%
+  dplyr::mutate(TL=as.numeric(TL))%>%
+  dplyr::filter(Predator==1)%>%
+  dplyr::select(species,Spp_Correct,L20cm,L30cm)
+Fishcatalog<-dplyr::right_join(PredList,Fishcatalog)
+#Cleaning abundances=0 option 1
+#Joining trait and abundance
+Fish_n_Traits<-dplyr::left_join(dataFish,Fishcatalog)
+Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0,FlagExclusionTax == 0)
+```
+
+
+Generate indicator database (all points, with year filter, includes Jaccard calculation)
+```{r}
+for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
+  print(t)
+  for(P in c(0,1,2)){
+    print(P)
+    for(d in c("All","Slope","Shelf")){
+      print(d)
+      TaxType<-t
+      Fish_n_Traits<-dplyr::left_join(dataFish,Fishcatalog)%>%
+        dplyr::filter(FlagExclusionTax==0)
+      Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0)%>%
+        dplyr::filter(year>=2012)
+      if (t!="All"){Fish_n_Traits<-traitfilter(Fish_n_Traits,"type",TaxType)}
+      if (P!=2){Fish_n_Traits<-traitfilter(Fish_n_Traits,"Pelagicos",P)}
+      P80_FnT<-YEARFILTERING(Fish_n_Traits,0.80)
+      P80_FnT<-dplyr::filter(P80_FnT,year>=2012)
+      
+      if (d!="All"){P80_FnT<-dplyr::filter(P80_FnT,depthreg==d)}
+      #Secondary P80_FnT database for Biomass and abundance (removal of problematic species)
+      P80_FnT2<-P80_FnT
+      if(ProblemSpecies==1)  {P80_FnT2<-dplyr::filter(P80_FnT2,Sampling_issues!=1)}
+      dplyr::select(P80_FnT2,-(Sampling_issues))
+      
+      {
+        #S,N####
+        #S
+        Richness<-dplyr::group_by(P80_FnT,year,coord)%>%
+          dplyr::summarise(Richness=n_distinct(Spp_Correct))%>%
+          dplyr::select((year),(coord),(Richness))
+        
+        #N
+        #Total
+        Abundances<-group_by(P80_FnT2,year,coord)%>%
+          dplyr::summarise(Abundance=sum(number))%>%
+          dplyr::mutate(Abundancelog=log(Abundance))%>%
+          dplyr::select((year),(coord),(Abundance),(Abundancelog))
+        #Species
+        AbundancesSp<-group_by(P80_FnT2,year,Spp_Correct,coord)%>%
+          dplyr::mutate(AbundanceSp=sum(number))%>%
+          distinct(Spp_Correct,.keep_all=TRUE)%>%
+          dplyr::select((year),(coord),(AbundanceSp))
+        
+        
+        #Shannon and J Manual method####
+        
+        
+        Shannon<-left_join(AbundancesSp,Abundances)%>%
+          mutate(Pi=AbundanceSp/Abundance)%>%
+          mutate(ShInd=Pi*ln(Pi))%>%
+          group_by(year,coord)%>%
+          dplyr::summarise(Hindex=-1*sum(ShInd))
+        
+        Richness2<-dplyr::group_by(P80_FnT2,year,coord,depthreg)%>%
+          dplyr::summarise(Richness=n_distinct(Spp_Correct))%>%
+          dplyr::select((year),(coord),(Richness))
+        J<-left_join(Richness2,Shannon)%>%
+          mutate(Hmax=log(Richness))%>%
+          mutate(J_index=Hindex/Hmax)%>%
+          dplyr::select(-Richness)
+        
+        
+        #Biomass####
+        {
+          #Community
+          Biomasscomm<-group_by(P80_FnT2,coord,year)%>%
+            dplyr::summarize(Biomass=sum(weight))%>%
+            dplyr::select((year),(coord),(Biomass))
+          #Custom filters
+          Biomasscal<-function(db,variable,bool){
+            Biomasscomm<-group_by(db,year,coord)%>%
+              dplyr::summarise(Biomass=sum(weight))%>%
+              dplyr::select((year),(coord),(Biomass))
+            
+            name <- paste("BIOMASS",variable,bool, sep = "")
+            name2 <- paste(name, "2A", sep = "")
+            
+            table <-group_by(db,year,coord)%>%
+              dplyr::filter((!!as.name(variable))==bool)%>%
+              dplyr::summarise(x=sum(weight))%>%
+              dplyr::select((year),(coord),(x))%>%
+              right_join(Biomasscomm)%>%
+              mutate(y=x/Biomass)%>%
+              dplyr::select((year),(coord),(y))%>%
+              dplyr::rename(!!quo_name(name2):=y)
+          }
+          ##Different Biomass related variables####
+          {
+            BH2A<- Biomasscal(P80_FnT2,"L20cm",1)
+            BH2A<-dplyr::rename(BH2A,BIOMASSPredator12A=BIOMASSL20cm12A)
+            BPel2A<-Biomasscal(P80_FnT2,"Pelagicos",1)
+            BF2A<-Biomasscal(P80_FnT2,"type","PECES")
+            BL2A<- Biomasscal(P80_FnT2,"Predator",0)
+            BBent2A<-Biomasscal(P80_FnT2,"Pelagicos",0)
+            BM2A<-Biomasscal(P80_FnT2,"type","MOLUSCOS")
+          }
+          #Invertebrate/all biomass
+          BI2A<-group_by(P80_FnT2,year,coord)%>%
+            filter(type!="PECES")%>%
+            dplyr::summarise(Binv=sum(weight))%>%
+            dplyr::select((year),(coord),(Binv))%>%
+            right_join(Biomasscomm)%>%
+            mutate(BI2A=Binv/Biomass)%>%
+            dplyr::select((year),(Biomass),(BI2A))
+          
+          #Mean Biomass
+          MeanSize<-left_join(Biomasscomm,Abundances)%>%
+            mutate(Mean_Size=Biomass/Abundance)
+          
+          
+        }
+        #Trophic level####
+        #Caution: not all species have a recorded TL but most have recorded biomass 
+        #don't use Biomasscomm
+        #TLsc
+        TL<-dplyr::filter(P80_FnT2,TL>0)%>%
+          dplyr::group_by(coord,year)%>%
+          dplyr::mutate(TLkg=TL*weight)%>%
+          dplyr::summarise(TLkgsum=sum(TLkg))
+        BiomassTL<-dplyr::filter(P80_FnT2,TL>0)%>%
+          dplyr::group_by(coord,year)%>%
+          dplyr::summarise(Biomass=sum(weight))
+        TLsc<-dplyr::left_join(TL,BiomassTL)%>%
+          dplyr::mutate(TLsc=(TLkgsum)/(Biomass))%>%
+          dplyr::select(year,coord,TLsc)
+        
+        #TLs3.25
+        TL3.25<-dplyr::filter(P80_FnT2,TL>=3.25)%>%
+          dplyr::group_by(coord,year)%>%
+          dplyr::mutate(TLkg=TL*weight)%>%
+          dplyr::summarise(TLkgsum=sum(TLkg))
+        BiomassTL<-dplyr::filter(P80_FnT2,TL>=3.25)%>%
+          dplyr::group_by(coord,year)%>%
+          dplyr::summarise(Biomass=sum(weight))
+        TLs3.25<-dplyr::left_join(TL3.25,BiomassTL)%>%
+          dplyr::mutate(TLs3.25=(TLkgsum)/(Biomass))%>%
+          dplyr::select(year,coord,TLs3.25)
+        
+        #TLs4
+        TL4<-dplyr::filter(P80_FnT2,TL>=4)%>%
+          dplyr::group_by(coord,year)%>%
+          dplyr::mutate(TLkg=TL*weight)%>%
+          dplyr::summarise(TLkgsum=sum(TLkg))
+        BiomassTL<-dplyr::filter(P80_FnT2,TL>4)%>%
+          dplyr::group_by(coord,year)%>%
+          dplyr::summarise(Biomass=sum(weight))
+        TLs4<-dplyr::left_join(TL4,BiomassTL)%>%
+          dplyr::mutate(TLs4=(TLkgsum)/(Biomass))%>%
+          dplyr::select(year,coord,TLs4)
+        remove(BiomassTL)
+        TL<-left_join(TLsc,TLs3.25)%>%
+          left_join(TLs4)
+        
+        #----------####
+        ####JOIN VARIABLES####
+        #Depths list
+        depthlist<-dplyr::select(dataFish,depth,coord,region)%>%
+          distinct(coord,.keep_all = TRUE)%>%
+          mutate(depth=as.numeric(as.character(depth)))
+        
+        ###
+        Indicators_table<- left_join(Biomasscomm,Richness)%>%
+          left_join(J)%>%
+          left_join(Abundances)%>%
+          right_join(MeanSize)%>%
+          left_join(TL)%>%
+          left_join(BH2A)%>%
+          left_join(BL2A)%>%
+          left_join(BF2A)%>%
+          left_join(BI2A)%>%
+          left_join(BM2A)%>%
+          left_join(BPel2A)%>%
+          left_join(BBent2A)%>%
+          left_join(MeanSize)%>%
+          right_join(depthlist)
+        
+        
+        ####Jaccard####
+        ###Fish per region###
+        P80_Reg<-dplyr::mutate(P80_FnT,region=as.factor(as.character(region)))
+        
+        YEARS<-as.vector(unique(P80_FnT$year))
+        YEARS<-sort(YEARS)
+        
+        
+        MatrixSpe<-P80_Reg%>%  
+          mutate(presence=as.integer((number/number)))%>%
+          dplyr::select((Spp_Correct),(presence),(region),(year))%>%
+          group_by(region,year)%>%
+          distinct(Spp_Correct,.keep_all=TRUE)%>%
+          ungroup("region","year")
+        
+        speclist<-distinct(P80_Reg,Spp_Correct)%>%
+          dplyr::select(Spp_Correct)
+        Cell_list<-distinct(P80_Reg,region)%>%
+          dplyr::select(region)
+        #3-Initializing Jaccard dataframes
+        JaccardChange_initial<-data.frame(region=as.character(),
+                                          year=as.numeric(),
+                                          beta.jtu=as.double(),
+                                          beta.jne=as.double(),
+                                          beta.jac=as.double())
+        JaccardChange_final<-data.frame(region=as.character(),
+                                        year=as.numeric(),
+                                        beta.jtu=as.double(),
+                                        beta.jne=as.double(),
+                                        beta.jac=as.double())
+        #4- Functions+Loop
+        yearpresence<-function(MatrixSpe,speclist,i){
+          data<-filter(MatrixSpe,.data$year==i)%>%
+            full_join(speclist,by=.data$Spp_Correct)%>%
+            full_join(Cell_list,by=.data$region)%>%#
+            pivot_wider(names_from = .data$Spp_Correct, values_from = .data$presence)%>%
+            dplyr::select((-.data$year))%>%
+            dplyr::select((order(colnames(.))),(.data$region))%>%
+            filter(.data$region != 0)%>%
+            arrange((.data$region))%>%
+            column_to_rownames("region")%>%
+            replace(is.na(.),0)
+          if ("NA" %in% colnames(data)==TRUE){data<- dplyr::select(data,(-"NA"))} 
+          else {return(data)}
+        }
+        
+        for (i in YEARS) {
+          data<-yearpresence(MatrixSpe,speclist,i)
+          nam <- paste("M", i, sep = "")
+          assign(nam, data)
+        }
+        ###
+        
+        ##JACCARD USING OLD METHOD##
+        {
+          jaccard.initial<-for(i in YEARS){
+            namFirst <- paste("M", YEARS[1], sep = "")
+            nami <- paste("M", i, sep = "")
+            x=get(namFirst)
+            y=get(nami)
+            
+            betadivF<-beta.temp(as.matrix(x),as.matrix(y),index.family="jaccard")
+            betadivF<-rownames_to_column(betadivF,"region")%>%
+              add_column(year=as.numeric(i))
+            JaccardChange_initial<-full_join(betadivF,JaccardChange_initial)
+          }
+          jaccard.final<-for(i in YEARS){
+            namLast <- paste("M", tail(YEARS,n=1), sep = "")
+            nami <- paste("M", i, sep = "")
+            x=get(namLast)
+            y=get(nami)
+            
+            betadivL<-beta.temp(as.matrix(x),as.matrix(y),index.family="jaccard")
+            betadivL<-rownames_to_column(betadivL,"region")%>%
+              add_column(year=as.numeric(i))
+            JaccardChange_final<-full_join(betadivL,JaccardChange_final)
+          }
+        }
+        #5- Jaccard dataframe tidying
+        JaccardChange_initial<-JaccardChange_initial%>%
+          dplyr::rename(Jaccard_initial2i=beta.jac,
+                        Nestedness_initial2i=beta.jne,
+                        Turnover_initial2i=beta.jtu)
+        JaccardChange_final<-JaccardChange_final%>%
+          dplyr::rename(Jaccard_final2i=beta.jac,
+                        Nestedness_final2i=beta.jne,
+                        Turnover_final2i=beta.jtu)
+        Beta_diversity <-left_join(JaccardChange_initial,JaccardChange_final)
+        Indicators_table<-left_join(Indicators_table,Beta_diversity)
+        
+        Indicators_table<-(dplyr::mutate(Indicators_table,region=as.factor(as.character(region))))
+        Indicators_table<-Indicators_table%>%#dplyr::group_by(region,year)%>%
+          replace(.,is.na(.),0)#%>%
+          
+          #dplyr::summarise_all(funs(mean))%>%
+          #ungroup()
+        AC<-Sys.time() }
+      tax<-switch(TaxType,"PECES" = "Fish","CRUSTÁCEOS" = "Crustaceans","MOLUSCOS" = "Molluscs")
+      pel<-switch(P+1,"Benthics","Pelagics","All")
+      if(ProblemSpecies==1){setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Points")}
+      else{ setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Points")}
+      Indicators_table$Pelagics<-switch(P+1,"Benthics","Pelagics","All")
+      Indicators_table$Taxa<-TaxType
+      Indicators_table$depthreg<-d
+      write.csv(Indicators_table,(paste("Indicators_Tableregs_WestMed_",t,pel,"_",d,".csv",sep="")))
+    }}}
+```
+
+Generate indicator database (by sector)
+```{r}
+ProblemSpecies<-1 #0 #Remove variable catchablity species? 1=yes
+
+for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
+  print(t)
+  for(P in c(0,1,2)){
+    print(P)
+   {
+      TaxType<-t
+      Fish_n_Traits<-dplyr::left_join(dataFish,Fishcatalog)%>%
+        dplyr::filter(FlagExclusionTax==0)%>%
+        dplyr::filter(year>=2012)
+      Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0)
+      if (t!="All"){Fish_n_Traits<-traitfilter(Fish_n_Traits,"type",TaxType)}
+      if (P!=2){Fish_n_Traits<-traitfilter(Fish_n_Traits,"Pelagicos",P)}
+      P80_FnT<-YEARFILTERING(Fish_n_Traits,0.80)
+
+     
+      #Secondary P80_FnT database for Biomass and abundance (removal of problematic species)
+      P80_FnT2<-P80_FnT
+      if(ProblemSpecies==1)  {P80_FnT2<-dplyr::filter(P80_FnT2,Sampling_issues!=1)}
+      dplyr::select(P80_FnT2,-(Sampling_issues))
+      {        
+        #S,N####
+        #S
+        Richness<-dplyr::group_by(P80_FnT,year,region)%>%
+          dplyr::summarise(Richness=n_distinct(Spp_Correct))%>%
+          dplyr::select((year),(region),(Richness))
+        
+        #N
+        #Total
+        Abundances<-group_by(P80_FnT2,year,region)%>%
+          dplyr::summarise(Abundance=sum(number))%>%
+          dplyr::mutate(Abundancelog=log(Abundance))%>%
+          dplyr::select((year),(region),(Abundance),(Abundancelog))
+        #Species
+        AbundancesSp<-group_by(P80_FnT2,year,Spp_Correct,region)%>%
+          dplyr::mutate(AbundanceSp=sum(number))%>%
+          distinct(Spp_Correct,.keep_all=TRUE)%>%
+          dplyr::select((year),(region),(AbundanceSp))
+        
+        
+        #Shannon and J Manual method####
+        
+        
+        Shannon<-left_join(AbundancesSp,Abundances)%>%
+          mutate(Pi=AbundanceSp/Abundance)%>%
+          mutate(ShInd=Pi*ln(Pi))%>%
+          group_by(year,region)%>%
+          dplyr::summarise(Hindex=-1*sum(ShInd))
+        
+        Richness2<-dplyr::group_by(P80_FnT2,year,region)%>%
+          dplyr::summarise(Richness=n_distinct(Spp_Correct))%>%
+          dplyr::select((year),(region),(Richness))
+        J<-left_join(Richness2,Shannon)%>%
+          mutate(Hmax=log(Richness))%>%
+          mutate(J_index=Hindex/Hmax)%>%
+          dplyr::select(-(Richness))
+        
+        
+        #Biomass####
+        {
+          #Community
+          Biomasscomm<-group_by(P80_FnT2,year,region)%>%
+            dplyr::summarise(Biomass=sum(weigth))%>%
+            dplyr::select((year),(region),(Biomass))
+          #Custom filters
+          Biomasscal<-function(db,variable,bool){
+            Biomasscomm<-group_by(db,year,region)%>%
+              dplyr::summarise(Biomass=sum(weigth))%>%
+              dplyr::select((year),(region),(Biomass))
+            
+            name <- paste("BIOMASS",variable,bool, sep = "")
+            name2 <- paste(name, "2A", sep = "")
+            
+            table <-group_by(db,year,region)%>%
+              dplyr::filter((!!as.name(variable))==bool)%>%
+              dplyr::summarise(x=sum(weigth))%>%
+              dplyr::select((year),(region),(x))%>%
+              right_join(Biomasscomm)%>%
+              mutate(y=x/Biomass)%>%
+              dplyr::select((year),(region),(y))%>%
+              dplyr::rename(!!quo_name(name2):=y)
+          }
+          
+          ##Different Biomass related variables####
+          {
+            BH2A<- Biomasscal(P80_FnT2,"L20cm",1)
+            BH2A<-dplyr::rename(BH2A,BIOMASSPredator12A=BIOMASSL20cm12A)
+            BPel2A<-Biomasscal(P80_FnT2,"Pelagicos",1)
+            BF2A<-Biomasscal(P80_FnT2,"type","PECES")
+            BL2A<- Biomasscal(P80_FnT2,"Predator",0)
+            BBent2A<-Biomasscal(P80_FnT2,"Pelagicos",0)
+            BM2A<-Biomasscal(P80_FnT2,"type","MOLUSCOS")
+          }
+          #Invertebrate/all biomass
+          BI2A<-group_by(P80_FnT2,year,region)%>%
+            filter(type!="PECES")%>%
+            dplyr::summarise(Binv=sum(weigth))%>%
+            dplyr::select((year),(region),(Binv))%>%
+            right_join(Biomasscomm)%>%
+            mutate(BI2A=Binv/Biomass)%>%
+            dplyr::select((year),(region),(Biomass),(BI2A))
+          
+          #Mean Biomass
+          MeanSize<-left_join(Biomasscomm,Abundances)%>%
+            mutate(Mean_Size=Biomass/Abundance)
+          
+          
+        }
+        
+        #Trophic level####
+        #Caution: not all species have a recorded TL but most have recorded biomass 
+        #don't use Biomasscomm
+        
+        #TLsc
+        TL<-dplyr::filter(P80_FnT2,TL>0)%>%
+          dplyr::group_by(region,year)%>%
+          dplyr::mutate(TLkg=TL*weigth)%>%
+          dplyr::summarise(TLkgsum=sum(TLkg))
+        BiomassTL<-dplyr::filter(P80_FnT2,TL>0)%>%
+          dplyr::group_by(region,year)%>%
+          dplyr::summarise(Biomass=sum(weigth))
+        TLsc<-dplyr::left_join(TL,BiomassTL)%>%
+          dplyr::mutate(TLsc=(TLkgsum)/(Biomass))%>%
+          dplyr::select(year,region,TLsc)
+        
+        #TLs3.25
+        TL3.25<-dplyr::filter(P80_FnT2,TL>=3.25)%>%
+          dplyr::group_by(region,year)%>%
+          dplyr::mutate(TLkg=TL*weigth)%>%
+          dplyr::summarise(TLkgsum=sum(TLkg))
+        BiomassTL<-dplyr::filter(P80_FnT,TL>=3.25)%>%
+          dplyr::group_by(region,year)%>%
+          dplyr::summarise(Biomass=sum(weigth))
+        TLs3.25<-dplyr::left_join(TL3.25,BiomassTL)%>%
+          dplyr::mutate(TLs3.25=(TLkgsum)/(Biomass))%>%
+          dplyr::select(year,region,TLs3.25)
+        
+        #TLs4
+        TL4<-dplyr::filter(P80_FnT2,TL>=4)%>%
+          dplyr::group_by(region,year)%>%
+          dplyr::mutate(TLkg=TL*weigth)%>%
+          dplyr::summarise(TLkgsum=sum(TLkg))
+        BiomassTL<-dplyr::filter(P80_FnT2,TL>4)%>%
+          dplyr::group_by(region,year)%>%
+          dplyr::summarise(Biomass=sum(weigth))
+        TLs4<-dplyr::left_join(TL4,BiomassTL)%>%
+          dplyr::mutate(TLs4=(TLkgsum)/(Biomass))%>%
+          dplyr::select(year,region,TLs4)
+        #joined database
+        TLindex<-left_join(TLsc,TLs3.25)%>%
+          left_join(TLs4)
+        
+        remove(BiomassTL)
+        depthlist<-dplyr::select(dataFish,depth,coord)%>%
+          distinct(coord,.keep_all = TRUE)%>%
+          mutate(depth=as.numeric(as.character(depth)))
+        
+        ###
+        Indicators_table<- left_join(Biomasscomm,Richness)%>%
+          left_join(J)%>%
+          left_join(Abundances)%>%
+          right_join(MeanSize)%>%
+          left_join(TL)%>%
+          left_join(BH2A)%>%
+          left_join(BL2A)%>%
+          left_join(BF2A)%>%
+          left_join(BI2A)%>%
+          left_join(BM2A)%>%
+          left_join(BPel2A)%>%
+          left_join(BBent2A)%>%
+          left_join(MeanSize)%>%
+          left_join(TLindex)
+      }
+      
+      tax<-switch(TaxType,"PECES" = "Fish","CRUSTÁCEOS" = "Crustaceans","MOLUSCOS" = "Molluscs")
+      pel<-switch(P+1,"Benthics","Pelagics","All")
+      if(ProblemSpecies==1){setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Sectors")}
+      else{ setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Sectors")}
+      Indicators_table$Pelagics<-switch(P+1,"Benthics","Pelagics","All")
+      Indicators_table$Taxa<-TaxType
+      Indicators_table$depthreg<-"All"
+      write.csv(Indicators_table,(paste("Indicators_Tableregs_WestMed_",tax,pel,"points","_","Alldepths",".csv",sep="")))
+    }}}
+
+```
+
+Join tables into Pointdat and Sectordat (useful when using more than one Taxa group)
+```{r}
+
+a<-switch(ProblemSpecies+1,"With problematic species","Without problematic species")
+
+  pointdatdir<-paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Points",sep="")
+
+  setwd(pointdatdir)
+xlist<-list.files(pattern = "*.csv")
+dbBase<-read.csv(paste(pointdatdir,"Indicators_Tableregs_WestMed_AllAll_All.csv",sep="/"))
+dbBase<-as.data.frame(dbBase[0,])
+for(i in xlist) { 
+  base <- read.csv(i,dec =".",sep=",")
+  if ("X" %in% colnames(base)==TRUE){base<-dplyr::select(base,-(X))}
+  if ("X1" %in% colnames(base)==TRUE){base<-dplyr::select(base,-(X1))}
+  base<-base%>%replace(is.na(.),0)%>%
+  dplyr::filter(year>0)
+  dbBase<-full_join(dbBase,base)
+}
+
+Pointdat<-dbBase
+
+
+
+sectordatdir<-paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Sectors",sep="")
+setwd(sectordatdir)
+xlist<-list.files(pattern = "*.csv")
+dbBase<-read.csv(paste(sectordatdir,"Indicators_Tableregs_WestMed_Allgamma_Alldepths.csv",sep="/"))
+dbBase<-as.data.frame(dbBase[0,])
+for(i in xlist) { 
+  base <- read.csv(i,dec =".",sep=",")
+  if ("X" %in% colnames(base)==TRUE){base<-dplyr::select(base,-(X))}
+  if ("X1" %in% colnames(base)==TRUE){base<-dplyr::select(base,-(X1))}
+  base<-base%>%replace(is.na(.),0)%>%
+  dplyr::filter(year>0)
+  dbBase<-full_join(dbBase,base)
+}
+Sectordat<-dbBase
+
+
+#Conversion to kg if it hasn't been done before or data was already in kg
+Pointdat<-dplyr::mutate(Pointdat,Biomass=Biomass/1000)
+Sectordat<-dplyr::mutate(Sectordat,Biomass=Biomass/1000)
+
+write.csv(Sectordat,paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/",a,"/Sectordat.csv",sep=""))
+write.csv(Pointdat,paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/",a,"/Pointdat.csv",sep=""))
+```
+
+Select indicators of interest
+
+```{r}
+indicators<-c()
+IndData<-[input data name]
+IndData<-IndData%>%select(year,long,lat,Taxa,Pelagics,depth)%>%
+  select(indicators)
+```
+
