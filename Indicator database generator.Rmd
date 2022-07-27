@@ -362,8 +362,8 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
         AC<-Sys.time() }
       tax<-switch(TaxType,"PECES" = "Fish","CRUSTÁCEOS" = "Crustaceans","MOLUSCOS" = "Molluscs")
       pel<-switch(P+1,"Benthics","Pelagics","All")
-      if(ProblemSpecies==1){setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Points")}
-      else{ setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Points")}
+      if(ProblemSpecies==1){setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Points")}
+      else{ setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Points")}
       Indicators_table$Pelagics<-switch(P+1,"Benthics","Pelagics","All")
       Indicators_table$Taxa<-TaxType
       Indicators_table$depthreg<-d
@@ -550,12 +550,12 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
       
       tax<-switch(TaxType,"PECES" = "Fish","CRUSTÁCEOS" = "Crustaceans","MOLUSCOS" = "Molluscs")
       pel<-switch(P+1,"Benthics","Pelagics","All")
-      if(ProblemSpecies==1){setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Sectors")}
-      else{ setwd("C:/Users/carli/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Sectors")}
+      if(ProblemSpecies==1){setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Sectors")}
+      else{ setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Sectors")}
       Indicators_table$Pelagics<-switch(P+1,"Benthics","Pelagics","All")
       Indicators_table$Taxa<-TaxType
       Indicators_table$depthreg<-"All"
-      write.csv(Indicators_table,(paste("Indicators_Tableregs_WestMed_",tax,pel,"sectors","_","Alldepths",".csv",sep="")))
+      write.csv(Indicators_table,(paste("Indicators_Tableregs_Nord_",tax,pel,"sectors","_","Alldepths",".csv",sep="")))
     }}}
 
 ```
@@ -565,7 +565,7 @@ Join tables into Pointdat and Sectordat (useful when using more than one Taxa gr
 
 a<-switch(ProblemSpecies+1,"With problematic species","Without problematic species")
 
-  pointdatdir<-paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Points",sep="")
+  pointdatdir<-paste("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Points",sep="")
 
   setwd(pointdatdir)
 xlist<-list.files(pattern = "*.csv")
@@ -584,7 +584,7 @@ Pointdat<-dbBase
 
 
 
-sectordatdir<-paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Sectors",sep="")
+sectordatdir<-paste("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Sectors",sep="")
 setwd(sectordatdir)
 xlist<-list.files(pattern = "*.csv")
 dbBase<-read.csv(paste(sectordatdir,"Indicators_Tableregs_WestMed_Allsectors_Alldepths.csv",sep="/"))
@@ -604,8 +604,8 @@ Sectordat<-dbBase
 Pointdat<-dplyr::mutate(Pointdat,Biomass=Biomass/1000)
 Sectordat<-dplyr::mutate(Sectordat,Biomass=Biomass/1000)
 
-write.csv(Sectordat,paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/",a,"/Sectordat.csv",sep=""))
-write.csv(Pointdat,paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/",a,"/Pointdat.csv",sep=""))
+write.csv(Sectordat,paste("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/",a,"/Sectordat.csv",sep=""))
+write.csv(Pointdat,paste("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/",a,"/Pointdat.csv",sep=""))
 ```
 
 Select indicators of interest
