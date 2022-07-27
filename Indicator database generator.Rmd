@@ -72,7 +72,7 @@ traitfilter<-function(db,variable,bool){
 Making Fish_n_Traits database
 
 ```{r}
-Fishcatalog<-readxl::read_excel("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Data/SppCatalogoWESTMEDcorrectspp.xlsx")%>%
+Fishcatalog<-readxl::read_excel("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Data/SppCatalog_MedNord_2022.xlsx")%>%
 dplyr::filter(FlagExclusionTax==0)
 PredList<- read.csv2("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Data/Predlist+20.csv")%>%
   dplyr::mutate(TL=as.numeric(TL))%>%
@@ -82,7 +82,7 @@ Fishcatalog<-dplyr::right_join(PredList,Fishcatalog)
 #Cleaning abundances=0 option 1
 #Joining trait and abundance
 Fish_n_Traits<-dplyr::left_join(dataFish,Fishcatalog)
-Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0,FlagExclusionTax == 0)
+Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0,FlagExclusionTax == 0,ID_Genus==1,ID_Species==1)
 ```
 
 
@@ -555,7 +555,7 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
       Indicators_table$Pelagics<-switch(P+1,"Benthics","Pelagics","All")
       Indicators_table$Taxa<-TaxType
       Indicators_table$depthreg<-"All"
-      write.csv(Indicators_table,(paste("Indicators_Tableregs_WestMed_",tax,pel,"points","_","Alldepths",".csv",sep="")))
+      write.csv(Indicators_table,(paste("Indicators_Tableregs_WestMed_",tax,pel,"sectors","_","Alldepths",".csv",sep="")))
     }}}
 
 ```
@@ -611,7 +611,7 @@ write.csv(Pointdat,paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scrip
 Select indicators of interest
 
 ```{r}
-indicators<-c()
+indicators<-c() #list relevant indicators
 IndData<-[input data name]
 IndData<-IndData%>%select(year,long,lat,Taxa,Pelagics,depth)%>%
   select(indicators)
