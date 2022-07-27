@@ -587,7 +587,7 @@ Pointdat<-dbBase
 sectordatdir<-paste("C:/Users/Carlos Veloy/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Sectors",sep="")
 setwd(sectordatdir)
 xlist<-list.files(pattern = "*.csv")
-dbBase<-read.csv(paste(sectordatdir,"Indicators_Tableregs_WestMed_Allgamma_Alldepths.csv",sep="/"))
+dbBase<-read.csv(paste(sectordatdir,"Indicators_Tableregs_WestMed_Allsectors_Alldepths.csv",sep="/"))
 dbBase<-as.data.frame(dbBase[0,])
 for(i in xlist) { 
   base <- read.csv(i,dec =".",sep=",")
