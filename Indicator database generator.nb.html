@@ -222,290 +222,32 @@ pre code {
 <p>Packages and initialization of functions</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5gYGAifQ== -->
-<pre class="r"><code>library(tidyverse)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJlZCBTMyBtZXRob2RzIG92ZXJ3cml0dGVuIGJ5ICdkYnBseXInOlxuICBtZXRob2QgICAgICAgICBmcm9tXG4gIHByaW50LnRibF9sYXp5ICAgICBcbiAgcHJpbnQudGJsX3NxbCAgICAgIFxuLS0gQXR0YWNoaW5nIHBhY2thZ2VzIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tIHRpZHl2ZXJzZSAxLjMuMSAtLVxudiBnZ3Bsb3QyIDMuMy41ICAgICB2IHB1cnJyICAgMC4zLjRcbnYgdGliYmxlICAzLjEuNiAgICAgdiBkcGx5ciAgIDEuMC44XG52IHRpZHlyICAgMS4yLjAgICAgIHYgc3RyaW5nciAxLjQuMFxudiByZWFkciAgIDIuMS4yICAgICB2IGZvcmNhdHMgMC41LjFcbi0tIENvbmZsaWN0cyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSB0aWR5dmVyc2VfY29uZmxpY3RzKCkgLS1cbnggZHBseXI6OmZpbHRlcigpIG1hc2tzIHN0YXRzOjpmaWx0ZXIoKVxueCBkcGx5cjo6bGFnKCkgICAgbWFza3Mgc3RhdHM6OmxhZygpXG4ifQ== -->
-<pre><code>Registered S3 methods overwritten by &#39;dbplyr&#39;:
-  method         from
-  print.tbl_lazy     
-  print.tbl_sql      
--- Attaching packages -------------------------------------------------------------------------- tidyverse 1.3.1 --
-v ggplot2 3.3.5     v purrr   0.3.4
-v tibble  3.1.6     v dplyr   1.0.8
-v tidyr   1.2.0     v stringr 1.4.0
-v readr   2.1.2     v forcats 0.5.1
--- Conflicts ----------------------------------------------------------------------------- tidyverse_conflicts() --
-x dplyr::filter() masks stats::filter()
-x dplyr::lag()    masks stats::lag()</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSAocmdkYWwpXG5gYGAifQ== -->
-<pre class="r"><code>library (rgdal)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBzcFxuUGxlYXNlIG5vdGUgdGhhdCByZ2RhbCB3aWxsIGJlIHJldGlyZWQgYnkgdGhlIGVuZCBvZiAyMDIzLFxucGxhbiB0cmFuc2l0aW9uIHRvIHNmL3N0YXJzL3RlcnJhIGZ1bmN0aW9ucyB1c2luZyBHREFMIGFuZCBQUk9KXG5hdCB5b3VyIGVhcmxpZXN0IGNvbnZlbmllbmNlLlxuXG5yZ2RhbDogdmVyc2lvbjogMS41LTI4LCAoU1ZOIHJldmlzaW9uIDExNTgpXG5HZW9zcGF0aWFsIERhdGEgQWJzdHJhY3Rpb24gTGlicmFyeSBleHRlbnNpb25zIHRvIFIgc3VjY2Vzc2Z1bGx5IGxvYWRlZFxuTG9hZGVkIEdEQUwgcnVudGltZTogR0RBTCAzLjIuMSwgcmVsZWFzZWQgMjAyMC8xMi8yOVxuUGF0aCB0byBHREFMIHNoYXJlZCBmaWxlczogQzovVXNlcnMvdXN1YXJpby9Eb2N1bWVudHMvUi93aW4tbGlicmFyeS80LjEvcmdkYWwvZ2RhbFxuR0RBTCBiaW5hcnkgYnVpbHQgd2l0aCBHRU9TOiBUUlVFIFxuTG9hZGVkIFBST0ogcnVudGltZTogUmVsLiA3LjIuMSwgSmFudWFyeSAxc3QsIDIwMjEsIFtQSl9WRVJTSU9OOiA3MjFdXG5QYXRoIHRvIFBST0ogc2hhcmVkIGZpbGVzOiBDOi9Vc2Vycy91c3VhcmlvL0RvY3VtZW50cy9SL3dpbi1saWJyYXJ5LzQuMS9yZ2RhbC9wcm9qXG5QUk9KIENETiBlbmFibGVkOiBGQUxTRVxuTGlua2luZyB0byBzcCB2ZXJzaW9uOjEuNC02XG5UbyBtdXRlIHdhcm5pbmdzIG9mIHBvc3NpYmxlIEdEQUwvT1NSIGV4cG9ydFRvUHJvajQoKSBkZWdyYWRhdGlvbixcbnVzZSBvcHRpb25zKFwicmdkYWxfc2hvd19leHBvcnRUb1Byb2o0X3dhcm5pbmdzXCI9XCJub25lXCIpIGJlZm9yZSBsb2FkaW5nIHNwIG9yIHJnZGFsLlxuT3ZlcndyaXR0ZW4gUFJPSl9MSUIgd2FzIEM6L1VzZXJzL3VzdWFyaW8vRG9jdW1lbnRzL1Ivd2luLWxpYnJhcnkvNC4xL3JnZGFsL3Byb2pcbiJ9 -->
-<pre><code>Loading required package: sp
-Please note that rgdal will be retired by the end of 2023,
-plan transition to sf/stars/terra functions using GDAL and PROJ
-at your earliest convenience.
-
-rgdal: version: 1.5-28, (SVN revision 1158)
-Geospatial Data Abstraction Library extensions to R successfully loaded
-Loaded GDAL runtime: GDAL 3.2.1, released 2020/12/29
-Path to GDAL shared files: C:/Users/usuario/Documents/R/win-library/4.1/rgdal/gdal
-GDAL binary built with GEOS: TRUE 
-Loaded PROJ runtime: Rel. 7.2.1, January 1st, 2021, [PJ_VERSION: 721]
-Path to PROJ shared files: C:/Users/usuario/Documents/R/win-library/4.1/rgdal/proj
-PROJ CDN enabled: FALSE
-Linking to sp version:1.4-6
-To mute warnings of possible GDAL/OSR exportToProj4() degradation,
-use options(&quot;rgdal_show_exportToProj4_warnings&quot;=&quot;none&quot;) before loading sp or rgdal.
-Overwritten PROJ_LIB was C:/Users/usuario/Documents/R/win-library/4.1/rgdal/proj</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSAobWFwdG9vbHMpXG5gYGAifQ== -->
-<pre class="r"><code>library (maptools)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiQ2hlY2tpbmcgcmdlb3MgYXZhaWxhYmlsaXR5OiBUUlVFXG5QbGVhc2Ugbm90ZSB0aGF0ICdtYXB0b29scycgd2lsbCBiZSByZXRpcmVkIGJ5IHRoZSBlbmQgb2YgMjAyMyxcbnBsYW4gdHJhbnNpdGlvbiBhdCB5b3VyIGVhcmxpZXN0IGNvbnZlbmllbmNlO1xuc29tZSBmdW5jdGlvbmFsaXR5IHdpbGwgYmUgbW92ZWQgdG8gJ3NwJy5cbiJ9 -->
-<pre><code>Checking rgeos availability: TRUE
-Please note that &#39;maptools&#39; will be retired by the end of 2023,
-plan transition at your earliest convenience;
-some functionality will be moved to &#39;sp&#39;.</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSAoc3ApXG5saWJyYXJ5IChpbmxtaXNjKVxuYGBgIn0= -->
-<pre class="r"><code>library (sp)
-library (inlmisc)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJlZCBTMyBtZXRob2Qgb3ZlcndyaXR0ZW4gYnkgJ2RhdGEudGFibGUnOlxuICBtZXRob2QgICAgICAgICAgIGZyb21cbiAgcHJpbnQuZGF0YS50YWJsZSAgICAgXG5VU0dTIFN1cHBvcnQgUGFja2FnZTogaHR0cHM6Ly9vd2kudXNncy5nb3YvUi9wYWNrYWdlcy5odG1sI3N1cHBvcnRcbiJ9 -->
-<pre><code>Registered S3 method overwritten by &#39;data.table&#39;:
-  method           from
-  print.data.table     
-USGS Support Package: https://owi.usgs.gov/R/packages.html#support</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSAocmFzdGVyKVxuYGBgIn0= -->
-<pre class="r"><code>library (raster)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYcmFzdGVy4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6ZHBseXLigJk6XG5cbiAgICBzZWxlY3RcbiJ9 -->
-<pre><code>
-Attaching package: ‘raster’
-
-The following object is masked from ‘package:dplyr’:
-
-    select</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSAoU2NpVmlld3MpXG5saWJyYXJ5KGJldGFwYXJ0KVxubGlicmFyeSAoc2YpXG5gYGAifQ== -->
-<pre class="r"><code>library (SciViews)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5saWJyYXJ5IChyZ2RhbClcbmxpYnJhcnkgKG1hcHRvb2xzKVxubGlicmFyeSAoc3ApXG5saWJyYXJ5IChpbmxtaXNjKVxubGlicmFyeSAocmFzdGVyKVxubGlicmFyeSAoU2NpVmlld3MpXG5saWJyYXJ5KGJldGFwYXJ0KVxubGlicmFyeSAoc2YpXG5saWJyYXJ5IChncmlkRXh0cmEpXG5saWJyYXJ5KGdncHVicilcbmxpYnJhcnkocnN0YXRpeClcbmxpYnJhcnkoYnJvb20pXG5saWJyYXJ5KGVtbWVhbnMpXG5saWJyYXJ5KGdncG1pc2MpXG5saWJyYXJ5KGdyaWQpXG5saWJyYXJ5KGNvcnJwbG90KVxubGlicmFyeSh4dGFibGUpXG5saWJyYXJ5KEhtaXNjKVxubGlicmFyeShtZ2N2KVxubGlicmFyeShtZ2NWaXopXG5saWJyYXJ5KHZveGVsKVxubGlicmFyeShtYWdyaXR0cilcblxuIyMjI0ZJTFRFUlMjIyMjXG4jZmlsdGVyIDgwJSBhcHBlYXJlYW5jZXNcblxuWUVBUkZJTFRFUklORyA8LWZ1bmN0aW9uKGRiLHBlcmNlbnQpe1xuICBUaW1lU2VyaWUgPSBsZW5ndGgoYXMudmVjdG9yKHVuaXF1ZShkYiR5ZWFyKSkpXG4gIHg9cGVyY2VudFxuICB5ZWFyZmlsdGVyPC1kYiU+JVxuICAgIGdyb3VwX2J5KFNwcF9Db3JyZWN0KSU+JVxuICAgIGRwbHlyOjpzdW1tYXJpc2UoeWVhcnNfcHJlc2VudCA9IG5fZGlzdGluY3QoLmRhdGEkeWVhcikpJT4lXG4gICAgZHBseXI6OmZpbHRlciguZGF0YSR5ZWFyc19wcmVzZW50PlRpbWVTZXJpZSp4KVxuICBzZW1pX2pvaW4oZGIseWVhcmZpbHRlcixieT1cIlNwcF9Db3JyZWN0XCIpXG59XG5cbiNGaWx0ZXIgYnkgb3RoZXIgdHJhaXRzIChhcHBseSBhZnRlciB0YXhvbm9taWNhbCBmaWx0ZXIgb3IgZGlyZWN0bHkgZm9yIHRvdGFsIGNvbW11bml0eSlcblxudHJhaXRmaWx0ZXI8LWZ1bmN0aW9uKGRiLHZhcmlhYmxlLGJvb2wpe1xuICBjb2x1bW48LXZhcmlhYmxlXG4gIGRwbHlyOjpmaWx0ZXIoZGIsKCEhYXMubmFtZShjb2x1bW4pKT09Ym9vbClcbn1cblxuXG5gYGAifQ== -->
+<pre class="r"><code>library(tidyverse)
+library (rgdal)
+library (maptools)
+library (sp)
+library (inlmisc)
+library (raster)
+library (SciViews)
 library(betapart)
-library (sf)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTGlua2luZyB0byBHRU9TIDMuOS4xLCBHREFMIDMuMi4xLCBQUk9KIDcuMi4xOyBzZl91c2VfczIoKSBpcyBUUlVFXG4ifQ== -->
-<pre><code>Linking to GEOS 3.9.1, GDAL 3.2.1, PROJ 7.2.1; sf_use_s2() is TRUE</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSAoZ3JpZEV4dHJhKVxuYGBgIn0= -->
-<pre class="r"><code>library (gridExtra)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYZ3JpZEV4dHJh4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6ZHBseXLigJk6XG5cbiAgICBjb21iaW5lXG4ifQ== -->
-<pre><code>
-Attaching package: ‘gridExtra’
-
-The following object is masked from ‘package:dplyr’:
-
-    combine</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShnZ3B1YnIpXG5gYGAifQ== -->
-<pre class="r"><code>library(ggpubr)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYZ2dwdWJy4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cmFzdGVy4oCZOlxuXG4gICAgcm90YXRlXG4ifQ== -->
-<pre><code>
-Attaching package: ‘ggpubr’
-
-The following object is masked from ‘package:raster’:
-
-    rotate</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShyc3RhdGl4KVxuYGBgIn0= -->
-<pre class="r"><code>library(rstatix)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYcnN0YXRpeOKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOnJhc3RlcuKAmTpcblxuICAgIHNlbGVjdFxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOnN0YXRz4oCZOlxuXG4gICAgZmlsdGVyXG4ifQ== -->
-<pre><code>
-Attaching package: ‘rstatix’
-
-The following object is masked from ‘package:raster’:
-
-    select
-
-The following object is masked from ‘package:stats’:
-
-    filter</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShicm9vbSlcbmxpYnJhcnkoZW1tZWFucylcbmxpYnJhcnkoZ2dwbWlzYylcbmBgYCJ9 -->
-<pre class="r"><code>library(broom)
+library (sf)
+library (gridExtra)
+library(ggpubr)
+library(rstatix)
+library(broom)
 library(emmeans)
-library(ggpmisc)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBnZ3BwXG5cbkF0dGFjaGluZyBwYWNrYWdlOiDigJhnZ3Bw4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6Z2dwbG90MuKAmTpcblxuICAgIGFubm90YXRlXG4ifQ== -->
-<pre><code>Loading required package: ggpp
+library(ggpmisc)
+library(grid)
+library(corrplot)
+library(xtable)
+library(Hmisc)
+library(mgcv)
+library(mgcViz)
+library(voxel)
+library(magrittr)
 
-Attaching package: ‘ggpp’
-
-The following object is masked from ‘package:ggplot2’:
-
-    annotate</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShncmlkKVxubGlicmFyeShjb3JycGxvdClcbmBgYCJ9 -->
-<pre class="r"><code>library(grid)
-library(corrplot)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiY29ycnBsb3QgMC45MiBsb2FkZWRcbiJ9 -->
-<pre><code>corrplot 0.92 loaded</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh4dGFibGUpXG5gYGAifQ== -->
-<pre class="r"><code>library(xtable)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYeHRhYmxl4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6bWFwdG9vbHPigJk6XG5cbiAgICBsYWJlbFxuIn0= -->
-<pre><code>
-Attaching package: ‘xtable’
-
-The following object is masked from ‘package:maptools’:
-
-    label</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShIbWlzYylcbmBgYCJ9 -->
-<pre class="r"><code>library(Hmisc)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBsYXR0aWNlXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IHN1cnZpdmFsXG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IEZvcm11bGFcblJlZ2lzdGVyZWQgUzMgbWV0aG9kIG92ZXJ3cml0dGVuIGJ5ICdodG1sd2lkZ2V0cyc6XG4gIG1ldGhvZCAgICAgICAgICAgZnJvbSAgICAgICAgIFxuICBwcmludC5odG1sd2lkZ2V0IHRvb2xzOnJzdHVkaW9cblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmEhtaXNj4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0cyBhcmUgbWFza2VkIGZyb20g4oCYcGFja2FnZTp4dGFibGXigJk6XG5cbiAgICBsYWJlbCwgbGFiZWw8LVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cmFzdGVy4oCZOlxuXG4gICAgbWFzaywgem9vbVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOm1hcHRvb2xz4oCZOlxuXG4gICAgbGFiZWxcblxuVGhlIGZvbGxvd2luZyBvYmplY3RzIGFyZSBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmRwbHly4oCZOlxuXG4gICAgc3JjLCBzdW1tYXJpemVcblxuVGhlIGZvbGxvd2luZyBvYmplY3RzIGFyZSBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmJhc2XigJk6XG5cbiAgICBmb3JtYXQucHZhbCwgdW5pdHNcbiJ9 -->
-<pre><code>Loading required package: lattice
-Loading required package: survival
-Loading required package: Formula
-Registered S3 method overwritten by &#39;htmlwidgets&#39;:
-  method           from         
-  print.htmlwidget tools:rstudio
-
-Attaching package: ‘Hmisc’
-
-The following objects are masked from ‘package:xtable’:
-
-    label, label&lt;-
-
-The following objects are masked from ‘package:raster’:
-
-    mask, zoom
-
-The following object is masked from ‘package:maptools’:
-
-    label
-
-The following objects are masked from ‘package:dplyr’:
-
-    src, summarize
-
-The following objects are masked from ‘package:base’:
-
-    format.pval, units</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShtZ2N2KVxuYGBgIn0= -->
-<pre class="r"><code>library(mgcv)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBubG1lXG5cbkF0dGFjaGluZyBwYWNrYWdlOiDigJhubG1l4oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cmFzdGVy4oCZOlxuXG4gICAgZ2V0RGF0YVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmRwbHly4oCZOlxuXG4gICAgY29sbGFwc2VcblxuVGhpcyBpcyBtZ2N2IDEuOC0zOC4gRm9yIG92ZXJ2aWV3IHR5cGUgJ2hlbHAoXCJtZ2N2LXBhY2thZ2VcIiknLlxuIn0= -->
-<pre><code>Loading required package: nlme
-
-Attaching package: ‘nlme’
-
-The following object is masked from ‘package:raster’:
-
-    getData
-
-The following object is masked from ‘package:dplyr’:
-
-    collapse
-
-This is mgcv 1.8-38. For overview type &#39;help(&quot;mgcv-package&quot;)&#39;.</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShtZ2NWaXopXG5gYGAifQ== -->
-<pre class="r"><code>library(mgcViz)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBxZ2FtXG5SZWdpc3RlcmVkIFMzIG1ldGhvZCBvdmVyd3JpdHRlbiBieSAnR0dhbGx5JzpcbiAgbWV0aG9kIGZyb20gICBcbiAgKy5nZyAgIGdncGxvdDJcblJlZ2lzdGVyZWQgUzMgbWV0aG9kIG92ZXJ3cml0dGVuIGJ5ICdtZ2NWaXonOlxuICBtZXRob2QgZnJvbSAgXG4gICsuZ2cgICBHR2FsbHlcblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmG1nY1ZpeuKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOkhtaXNj4oCZOlxuXG4gICAgem9vbVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmxhdHRpY2XigJk6XG5cbiAgICBxcVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOnJhc3RlcuKAmTpcblxuICAgIHpvb21cblxuVGhlIGZvbGxvd2luZyBvYmplY3RzIGFyZSBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOnN0YXRz4oCZOlxuXG4gICAgcXFsaW5lLCBxcW5vcm0sIHFxcGxvdFxuIn0= -->
-<pre><code>Loading required package: qgam
-Registered S3 method overwritten by &#39;GGally&#39;:
-  method from   
-  +.gg   ggplot2
-Registered S3 method overwritten by &#39;mgcViz&#39;:
-  method from  
-  +.gg   GGally
-
-Attaching package: ‘mgcViz’
-
-The following object is masked from ‘package:Hmisc’:
-
-    zoom
-
-The following object is masked from ‘package:lattice’:
-
-    qq
-
-The following object is masked from ‘package:raster’:
-
-    zoom
-
-The following objects are masked from ‘package:stats’:
-
-    qqline, qqnorm, qqplot</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh2b3hlbClcbmBgYCJ9 -->
-<pre class="r"><code>library(voxel)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBsbWVyVGVzdFxuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBsbWU0XG5Mb2FkaW5nIHJlcXVpcmVkIHBhY2thZ2U6IE1hdHJpeFxuXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYTWF0cml44oCZXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0cyBhcmUgbWFza2VkIGZyb20g4oCYcGFja2FnZTp0aWR5cuKAmTpcblxuICAgIGV4cGFuZCwgcGFjaywgdW5wYWNrXG5cblxuQXR0YWNoaW5nIHBhY2thZ2U6IOKAmGxtZTTigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTpubG1l4oCZOlxuXG4gICAgbG1MaXN0XG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cmFzdGVy4oCZOlxuXG4gICAgZ2V0RGF0YVxuXG5cbkF0dGFjaGluZyBwYWNrYWdlOiDigJhsbWVyVGVzdOKAmVxuXG5UaGUgZm9sbG93aW5nIG9iamVjdCBpcyBtYXNrZWQgZnJvbSDigJhwYWNrYWdlOmxtZTTigJk6XG5cbiAgICBsbWVyXG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6c3RhdHPigJk6XG5cbiAgICBzdGVwXG4ifQ== -->
-<pre><code>Loading required package: lmerTest
-Loading required package: lme4
-Loading required package: Matrix
-
-Attaching package: ‘Matrix’
-
-The following objects are masked from ‘package:tidyr’:
-
-    expand, pack, unpack
-
-
-Attaching package: ‘lme4’
-
-The following object is masked from ‘package:nlme’:
-
-    lmList
-
-The following object is masked from ‘package:raster’:
-
-    getData
-
-
-Attaching package: ‘lmerTest’
-
-The following object is masked from ‘package:lme4’:
-
-    lmer
-
-The following object is masked from ‘package:stats’:
-
-    step</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShtYWdyaXR0cilcbmBgYCJ9 -->
-<pre class="r"><code>library(magrittr)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG5BdHRhY2hpbmcgcGFja2FnZTog4oCYbWFncml0dHLigJlcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTpyYXN0ZXLigJk6XG5cbiAgICBleHRyYWN0XG5cblRoZSBmb2xsb3dpbmcgb2JqZWN0IGlzIG1hc2tlZCBmcm9tIOKAmHBhY2thZ2U6cHVycnLigJk6XG5cbiAgICBzZXRfbmFtZXNcblxuVGhlIGZvbGxvd2luZyBvYmplY3QgaXMgbWFza2VkIGZyb20g4oCYcGFja2FnZTp0aWR5cuKAmTpcblxuICAgIGV4dHJhY3RcbiJ9 -->
-<pre><code>
-Attaching package: ‘magrittr’
-
-The following object is masked from ‘package:raster’:
-
-    extract
-
-The following object is masked from ‘package:purrr’:
-
-    set_names
-
-The following object is masked from ‘package:tidyr’:
-
-    extract</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyMjI0ZJTFRFUlMjIyMjXG4jZmlsdGVyIDgwJSBhcHBlYXJlYW5jZXNcblxuWUVBUkZJTFRFUklORyA8LWZ1bmN0aW9uKGRiLHBlcmNlbnQpe1xuICBUaW1lU2VyaWUgPSBsZW5ndGgoYXMudmVjdG9yKHVuaXF1ZShkYiR5ZWFyKSkpXG4gIHg9cGVyY2VudFxuICB5ZWFyZmlsdGVyPC1kYiU+JVxuICAgIGdyb3VwX2J5KFNwcF9Db3JyZWN0KSU+JVxuICAgIGRwbHlyOjpzdW1tYXJpc2UoeWVhcnNfcHJlc2VudCA9IG5fZGlzdGluY3QoLmRhdGEkeWVhcikpJT4lXG4gICAgZHBseXI6OmZpbHRlciguZGF0YSR5ZWFyc19wcmVzZW50PlRpbWVTZXJpZSp4KVxuICBzZW1pX2pvaW4oZGIseWVhcmZpbHRlcixieT1cIlNwcF9Db3JyZWN0XCIpXG59XG5cbiNGaWx0ZXIgYnkgb3RoZXIgdHJhaXRzIChhcHBseSBhZnRlciB0YXhvbm9taWNhbCBmaWx0ZXIgb3IgZGlyZWN0bHkgZm9yIHRvdGFsIGNvbW11bml0eSlcblxudHJhaXRmaWx0ZXI8LWZ1bmN0aW9uKGRiLHZhcmlhYmxlLGJvb2wpe1xuICBjb2x1bW48LXZhcmlhYmxlXG4gIGRwbHlyOjpmaWx0ZXIoZGIsKCEhYXMubmFtZShjb2x1bW4pKT09Ym9vbClcbn1cblxuXG5gYGAifQ== -->
-<pre class="r"><code>####FILTERS####
+####FILTERS####
 #filter 80% appeareances
 
 YEARFILTERING &lt;-function(db,percent){
