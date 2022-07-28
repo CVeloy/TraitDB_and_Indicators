@@ -8,7 +8,7 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 Column naming convention:
 
-species (species name as it appears on registers)
+species (species name as it appears on registers,must have underscore between Genus and specific name)
 weight (kg/km3)
 number (No./km3)
 long (Longitude)
@@ -52,7 +52,7 @@ YEARFILTERING <-function(db,percent){
   TimeSerie = length(as.vector(unique(db$year)))
   x=percent
   yearfilter<-db%>%
-    group_by(Spp_Correct,region)%>%
+    group_by(Spp_Correct)%>%
     dplyr::summarise(years_present = n_distinct(.data$year))%>%
     dplyr::filter(.data$years_present>TimeSerie*x)
   semi_join(db,yearfilter,by="Spp_Correct")
@@ -82,13 +82,16 @@ Fishcatalog<-dplyr::right_join(PredList,Fishcatalog)
 #Cleaning abundances=0 option 1
 #Joining trait and abundance
 Fish_n_Traits<-dplyr::left_join(dataFish,Fishcatalog)
-Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0,FlagExclusionTax == 0,ID_Genus==1,ID_Species==1)
+Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0,ID_Species==1)
 ```
 
 
 Generate indicator database (all points, with year filter, includes Jaccard calculation)
 ```{r}
-for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
+ProblemSpecies<-1 #0 #Remove variable catchablity species? 1=yes
+
+
+for(t in c("All","MOLUSCOS","CRUSTÁCEOS")){
   print(t)
   for(P in c(0,1,2)){
     print(P)
@@ -99,12 +102,12 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
         dplyr::filter(FlagExclusionTax==0)
       Fish_n_Traits<- dplyr::filter (Fish_n_Traits,number != 0)%>%
         dplyr::filter(year>=2012)
-      if (t!="All"){Fish_n_Traits<-traitfilter(Fish_n_Traits,"type",TaxType)}
+      if (t!="All"){Fish_n_Traits<-dplyr::filter(Fish_n_Traits,type!="PECES")}
       if (P!=2){Fish_n_Traits<-traitfilter(Fish_n_Traits,"Pelagicos",P)}
       P80_FnT<-YEARFILTERING(Fish_n_Traits,0.80)
       P80_FnT<-dplyr::filter(P80_FnT,year>=2012)
       
-      if (d!="All"){P80_FnT<-dplyr::filter(P80_FnT,depthreg==d)}
+      
       #Secondary P80_FnT database for Biomass and abundance (removal of problematic species)
       P80_FnT2<-P80_FnT
       if(ProblemSpecies==1)  {P80_FnT2<-dplyr::filter(P80_FnT2,Sampling_issues!=1)}
@@ -139,7 +142,7 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
           group_by(year,coord)%>%
           dplyr::summarise(Hindex=-1*sum(ShInd))
         
-        Richness2<-dplyr::group_by(P80_FnT2,year,coord,depthreg)%>%
+        Richness2<-dplyr::group_by(P80_FnT2,year,coord)%>%
           dplyr::summarise(Richness=n_distinct(Spp_Correct))%>%
           dplyr::select((year),(coord),(Richness))
         J<-left_join(Richness2,Shannon)%>%
@@ -242,7 +245,7 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
         #----------####
         ####JOIN VARIABLES####
         #Depths list
-        depthlist<-dplyr::select(dataFish,depth,coord,region)%>%
+        depthlist<-dplyr::select(dataFish,depth,coord)%>%
           distinct(coord,.keep_all = TRUE)%>%
           mutate(depth=as.numeric(as.character(depth)))
         
@@ -263,111 +266,125 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
           right_join(depthlist)
         
         
-        ####Jaccard####
-        ###Fish per region###
-        P80_Reg<-dplyr::mutate(P80_FnT,region=as.factor(as.character(region)))
-        
-        YEARS<-as.vector(unique(P80_FnT$year))
-        YEARS<-sort(YEARS)
-        
-        
-        MatrixSpe<-P80_Reg%>%  
-          mutate(presence=as.integer((number/number)))%>%
-          dplyr::select((Spp_Correct),(presence),(region),(year))%>%
-          group_by(region,year)%>%
-          distinct(Spp_Correct,.keep_all=TRUE)%>%
-          ungroup("region","year")
-        
-        speclist<-distinct(P80_Reg,Spp_Correct)%>%
-          dplyr::select(Spp_Correct)
-        Cell_list<-distinct(P80_Reg,region)%>%
-          dplyr::select(region)
-        #3-Initializing Jaccard dataframes
-        JaccardChange_initial<-data.frame(region=as.character(),
-                                          year=as.numeric(),
-                                          beta.jtu=as.double(),
-                                          beta.jne=as.double(),
-                                          beta.jac=as.double())
-        JaccardChange_final<-data.frame(region=as.character(),
-                                        year=as.numeric(),
-                                        beta.jtu=as.double(),
-                                        beta.jne=as.double(),
-                                        beta.jac=as.double())
-        #4- Functions+Loop
-        yearpresence<-function(MatrixSpe,speclist,i){
-          data<-filter(MatrixSpe,.data$year==i)%>%
-            full_join(speclist,by=.data$Spp_Correct)%>%
-            full_join(Cell_list,by=.data$region)%>%#
-            pivot_wider(names_from = .data$Spp_Correct, values_from = .data$presence)%>%
-            dplyr::select((-.data$year))%>%
-            dplyr::select((order(colnames(.))),(.data$region))%>%
-            filter(.data$region != 0)%>%
-            arrange((.data$region))%>%
-            column_to_rownames("region")%>%
-            replace(is.na(.),0)
-          if ("NA" %in% colnames(data)==TRUE){data<- dplyr::select(data,(-"NA"))} 
-          else {return(data)}
-        }
-        
-        for (i in YEARS) {
-          data<-yearpresence(MatrixSpe,speclist,i)
-          nam <- paste("M", i, sep = "")
-          assign(nam, data)
-        }
-        ###
-        
-        ##JACCARD USING OLD METHOD##
-        {
-          jaccard.initial<-for(i in YEARS){
-            namFirst <- paste("M", YEARS[1], sep = "")
-            nami <- paste("M", i, sep = "")
-            x=get(namFirst)
-            y=get(nami)
-            
-            betadivF<-beta.temp(as.matrix(x),as.matrix(y),index.family="jaccard")
-            betadivF<-rownames_to_column(betadivF,"region")%>%
-              add_column(year=as.numeric(i))
-            JaccardChange_initial<-full_join(betadivF,JaccardChange_initial)
-          }
-          jaccard.final<-for(i in YEARS){
-            namLast <- paste("M", tail(YEARS,n=1), sep = "")
-            nami <- paste("M", i, sep = "")
-            x=get(namLast)
-            y=get(nami)
-            
-            betadivL<-beta.temp(as.matrix(x),as.matrix(y),index.family="jaccard")
-            betadivL<-rownames_to_column(betadivL,"region")%>%
-              add_column(year=as.numeric(i))
-            JaccardChange_final<-full_join(betadivL,JaccardChange_final)
-          }
-        }
-        #5- Jaccard dataframe tidying
-        JaccardChange_initial<-JaccardChange_initial%>%
-          dplyr::rename(Jaccard_initial2i=beta.jac,
-                        Nestedness_initial2i=beta.jne,
-                        Turnover_initial2i=beta.jtu)
-        JaccardChange_final<-JaccardChange_final%>%
-          dplyr::rename(Jaccard_final2i=beta.jac,
-                        Nestedness_final2i=beta.jne,
-                        Turnover_final2i=beta.jtu)
-        Beta_diversity <-left_join(JaccardChange_initial,JaccardChange_final)
-        Indicators_table<-left_join(Indicators_table,Beta_diversity)
-        
-        Indicators_table<-(dplyr::mutate(Indicators_table,region=as.factor(as.character(region))))
-        Indicators_table<-Indicators_table%>%#dplyr::group_by(region,year)%>%
-          replace(.,is.na(.),0)#%>%
-          
-          #dplyr::summarise_all(funs(mean))%>%
-          #ungroup()
+       
         AC<-Sys.time() }
+      
+      ####Jaccard####
+###Fish per region###
+P80_Reg<-dplyr::mutate(P80_FnT,region=as.factor(as.character(region)))
+
+YEARS<-as.vector(unique(P80_FnT$year))
+YEARS<-sort(YEARS)
+
+
+MatrixSpe<-P80_Reg%>%  
+  mutate(presence=as.integer((number/number)))%>%
+  dplyr::select((Spp_Correct),(presence),(region),(year))%>%
+  group_by(region,year)%>%
+  distinct(Spp_Correct,.keep_all=TRUE)%>%
+  ungroup("region","year")
+
+speclist<-distinct(P80_Reg,Spp_Correct)%>%
+  dplyr::select(Spp_Correct)
+Cell_list<-distinct(P80_Reg,region)%>%
+  dplyr::select(region)
+#3-Initializing Jaccard dataframes
+JaccardChange_initial<-data.frame(region=as.character(),
+                                  year=as.numeric(),
+                                  beta.jtu=as.double(),
+                                  beta.jne=as.double(),
+                                  beta.jac=as.double())
+JaccardChange_final<-data.frame(region=as.character(),
+                                year=as.numeric(),
+                                beta.jtu=as.double(),
+                                beta.jne=as.double(),
+                                beta.jac=as.double())
+#4- Functions+Loop
+yearpresence<-function(MatrixSpe,speclist,i){
+  data<-filter(MatrixSpe,.data$year==i)%>%
+    full_join(speclist,by=.data$Spp_Correct)%>%
+    full_join(Cell_list,by=.data$region)%>%#
+    pivot_wider(names_from = .data$Spp_Correct, values_from = .data$presence)%>%
+    dplyr::select((-.data$year))%>%
+    dplyr::select((order(colnames(.))),(.data$region))%>%
+    filter(.data$region != 0)%>%
+    arrange((.data$region))%>%
+    column_to_rownames("region")%>%
+    replace(is.na(.),0)
+  if ("NA" %in% colnames(data)==TRUE){data<- dplyr::select(data,(-"NA"))} 
+  else {return(data)}
+}
+
+for (i in YEARS) {
+  data<-yearpresence(MatrixSpe,speclist,i)
+  nam <- paste("M", i, sep = "")
+  assign(nam, data)
+}
+###
+
+##JACCARD USING OLD METHOD##
+{
+  jaccard.initial<-for(i in YEARS){
+    namFirst <- paste("M", YEARS[1], sep = "")
+    nami <- paste("M", i, sep = "")
+    x=get(namFirst)
+    y=get(nami)
+    
+    betadivF<-beta.temp(as.matrix(x),as.matrix(y),index.family="jaccard")
+    betadivF<-rownames_to_column(betadivF,"region")%>%
+      add_column(year=as.numeric(i))
+    JaccardChange_initial<-full_join(betadivF,JaccardChange_initial)
+  }
+  jaccard.final<-for(i in YEARS){
+    namLast <- paste("M", tail(YEARS,n=1), sep = "")
+    nami <- paste("M", i, sep = "")
+    x=get(namLast)
+    y=get(nami)
+    
+    betadivL<-beta.temp(as.matrix(x),as.matrix(y),index.family="jaccard")
+    betadivL<-rownames_to_column(betadivL,"region")%>%
+      add_column(year=as.numeric(i))
+    JaccardChange_final<-full_join(betadivL,JaccardChange_final)
+  }
+}
+#5- Jaccard dataframe tidying
+JaccardChange_initial<-JaccardChange_initial%>%
+  dplyr::rename(Jaccard_initial2i=beta.jac,
+                Nestedness_initial2i=beta.jne,
+                Turnover_initial2i=beta.jtu)
+JaccardChange_final<-JaccardChange_final%>%
+  dplyr::rename(Jaccard_final2i=beta.jac,
+                Nestedness_final2i=beta.jne,
+                Turnover_final2i=beta.jtu)
+Beta_diversity <-left_join(JaccardChange_initial,JaccardChange_final)
+Indicators_table<-left_join(Indicators_table,Beta_diversity)
+
+Indicators_table<-(dplyr::mutate(Indicators_table,region=as.factor(as.character(region))))
+Indicators_table<-Indicators_table%>%#dplyr::group_by(region,year)%>%
+  replace(.,is.na(.),0)#%>%
+
+#dplyr::summarise_all(funs(mean))%>%
+#ungroup()
+      
+      
       tax<-switch(TaxType,"PECES" = "Fish","CRUSTÁCEOS" = "Crustaceans","MOLUSCOS" = "Molluscs")
       pel<-switch(P+1,"Benthics","Pelagics","All")
-      if(ProblemSpecies==1){setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Points")}
-      else{ setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Points")}
+      
+      subfolder_names <- c("/Nord","/With problematic species","/Points") 
+for (j in seq_along(subfolder_names)){
+  path<-paste("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results",subfolder_names[0],sep="")
+  folder<-dir.create(paste0(path,subfolder_names[j]))
+}
+      
+      dir.create(file.path("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results", "Nord/With problematic species/Points"), recursive = TRUE)
+      dir.create(file.path("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results", "Nord/Without problematic species/Points"), recursive = TRUE)
+      
+      if(ProblemSpecies==1){setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/Nord/Without problematic species/Points")}
+      else{ setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/Nord/With problematic species/Points")}
       Indicators_table$Pelagics<-switch(P+1,"Benthics","Pelagics","All")
       Indicators_table$Taxa<-TaxType
-      Indicators_table$depthreg<-d
-      write.csv(Indicators_table,(paste("Indicators_Tableregs_WestMed_",t,pel,"_",d,".csv",sep="")))
+      
+      write.csv(Indicators_table,(paste("Indicators_Tableregs_Nord_",t,pel,".csv",sep="")))
     }}}
 ```
 
@@ -550,8 +567,12 @@ for(t in c("All","PECES","MOLUSCOS","CRUSTÁCEOS")){
       
       tax<-switch(TaxType,"PECES" = "Fish","CRUSTÁCEOS" = "Crustaceans","MOLUSCOS" = "Molluscs")
       pel<-switch(P+1,"Benthics","Pelagics","All")
-      if(ProblemSpecies==1){setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/Without problematic species/Sectors")}
-      else{ setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/With problematic species/Sectors")}
+            dir.create(file.path("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results", "Nord/With problematic species/Points"), recursive = TRUE)
+      dir.create(file.path("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results", "Nord/Without problematic species/Points"), recursive = TRUE)
+      
+      if(ProblemSpecies==1){setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/Nord/Without problematic species/Sector")}
+      else{ setwd("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/Nord/With problematic species/Sector")}
+      
       Indicators_table$Pelagics<-switch(P+1,"Benthics","Pelagics","All")
       Indicators_table$Taxa<-TaxType
       Indicators_table$depthreg<-"All"
@@ -565,11 +586,11 @@ Join tables into Pointdat and Sectordat (useful when using more than one Taxa gr
 
 a<-switch(ProblemSpecies+1,"With problematic species","Without problematic species")
 
-  pointdatdir<-paste("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/WestMed/",a,"/Points",sep="")
+  pointdatdir<-paste("D:/Dropbox/Tesis Carlos Veloy/Scripts Carlos/Results/Nord/",a,"/Points",sep="")
 
   setwd(pointdatdir)
 xlist<-list.files(pattern = "*.csv")
-dbBase<-read.csv(paste(pointdatdir,"Indicators_Tableregs_WestMed_AllAll_All.csv",sep="/"))
+dbBase<-read.csv(paste(pointdatdir,"Indicators_Tableregs_Nord_AllAll.csv",sep="/"))
 dbBase<-as.data.frame(dbBase[0,])
 for(i in xlist) { 
   base <- read.csv(i,dec =".",sep=",")
